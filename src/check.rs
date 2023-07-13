@@ -1,8 +1,8 @@
+use flate2::read::MultiGzDecoder;
 use std::collections::HashMap;
 use std::error::Error;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
-use flate2::read::MultiGzDecoder;
 use std::path::Path;
 
 pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
@@ -26,7 +26,7 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
             if i % 4 == 3 {
                 let read_id = &read_id[1..];
                 let sequence_length = sequence.len();
-                
+
                 match hash_info.entry(read_id.to_string()) {
                     std::collections::hash_map::Entry::Vacant(entry) => {
                         entry.insert(sequence_length);
@@ -50,7 +50,7 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
             if i % 2 == 1 {
                 let read_id = read_id.trim_start_matches('@');
                 let sequence_length = sequence.len();
-                
+
                 match hash_info.entry(read_id.to_string()) {
                     std::collections::hash_map::Entry::Vacant(entry) => {
                         entry.insert(sequence_length);
@@ -82,7 +82,8 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
     let median = if values.len() / 2 % 2 == 0 {
         *sorted_values[values.len() / 2] as f64
     } else {
-        (*sorted_values[values.len() / 2 - 1] as f64 + *sorted_values[values.len() / 2] as f64) / 2 as f64
+        (*sorted_values[values.len() / 2 - 1] as f64 + *sorted_values[values.len() / 2] as f64)
+            / 2 as f64
     };
 
     let mut len: usize = 0;

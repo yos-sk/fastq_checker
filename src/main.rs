@@ -15,10 +15,7 @@ struct Arguments {
 
 fn main() {
     let arguments = Arguments::parse();
-    if let Err(error) = check::run(
-        &arguments.input_file,
-        &arguments.format
-    ) {
+    if let Err(error) = check::run(&arguments.input_file, &arguments.format) {
         eprintln!("{}", error);
         process::exit(1);
     }
