@@ -11,6 +11,12 @@ cargo build --release
 
 ## Usage
 
+- Check: check duplicates and calculate statistics
 ```
-./target/release/fastq_checker --input-file ${INPUT_FILE} --format {fastq/fasta}
+./target/release/fastq_checker check --input-file ${INPUT_FILE} --format {fastq/fasta}
+```
+
+- Rmdup: remove duplicates
+```
+./target/release/fastq_checker rmdup --input-file ${INPUT_FILE} --format {fastq/fasta}
 ```

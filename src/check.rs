@@ -1,9 +1,9 @@
-use flate2::read::MultiGzDecoder;
 use std::collections::HashMap;
 use std::error::Error;
-use std::fs::File;
-use std::io::{BufRead, BufReader};
-use std::path::Path;
+use std::io::BufRead;
+
+use fastq_checker::open_file;
+
 
 pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
     let reader = open_file(input_file).expect(&format!("Could not open {}", input_file));
@@ -40,26 +40,42 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
             }
         }
     } else if format == "fasta" {
-        for (i, line) in reader.lines().enumerate() {
+        for line in reader.lines() {
             let line = line?;
-            match i % 2 {
-                0 => read_id = line,
-                1 => sequence = line,
-                _ => (),
+            if line.starts_with(">") {
+                if !sequence.is_empty() {
+                    let read_id = read_id.trim_start_matches('@');
+                    let sequence_length = sequence.len();
+                    match hash_info.entry(read_id.to_string()) {
+                        std::collections::hash_map::Entry::Vacant(entry) => {
+                            entry.insert(sequence_length);
+                            num_read += 1;
+                        }
+                        std::collections::hash_map::Entry::Occupied(entry) => {
+                            num_read += 1;
+                            dup_read += 1;
+                        }
+                    }
+                    sequence.clear();
+                }
+                read_id = line;
+            } else {
+                sequence.push_str(&line);
             }
-            if i % 2 == 1 {
-                let read_id = read_id.trim_start_matches('@');
-                let sequence_length = sequence.len();
+        }
 
-                match hash_info.entry(read_id.to_string()) {
-                    std::collections::hash_map::Entry::Vacant(entry) => {
-                        entry.insert(sequence_length);
-                        num_read += 1;
-                    }
-                    std::collections::hash_map::Entry::Occupied(entry) => {
-                        num_read += 1;
-                        dup_read += 1;
-                    }
+        if !sequence.is_empty() {
+            let read_id = read_id.trim_start_matches('@');
+            let sequence_length = sequence.len();
+
+            match hash_info.entry(read_id.to_string()) {
+                std::collections::hash_map::Entry::Vacant(entry) => {
+                    entry.insert(sequence_length);
+                    num_read += 1;
+                }
+                std::collections::hash_map::Entry::Occupied(entry) => {
+                    num_read += 1;
+                    dup_read += 1;
                 }
             }
         }
@@ -107,18 +123,4 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
     println!("Min seq:     {} bp", min_value);
     println!("Max seq:     {} bp", max_value);
     Ok(())
-}
-
-fn open_file<P: AsRef<Path>>(p: P) -> Result<Box<dyn BufRead>, Box<dyn Error>> {
-    let r = File::open(p.as_ref())?;
-    let ext = p.as_ref().extension();
-
-    if ext == Some(std::ffi::OsStr::new("gz")) {
-        let gz = MultiGzDecoder::new(r);
-        let buf_reader = BufReader::new(gz);
-        Ok(Box::new(buf_reader))
-    } else {
-        let buf_reader = BufReader::new(r);
-        Ok(Box::new(buf_reader))
-    }
 }
