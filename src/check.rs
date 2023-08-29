@@ -105,6 +105,7 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
     let mut len: usize = 0;
     let total = sum as usize;
     let mut n50 = 0;
+    let mut n90 = 0;
 
     for val in sorted_values.iter() {
         len += **val;
@@ -114,12 +115,22 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
         }
     }
 
+    for val in sorted_values.iter() {
+        len += **val;
+        if len > total * 9 / 10 {
+            n90 = **val;
+            break;
+        }
+    }
+
+
     println!("Total n:     {}", num_read);
     println!("Duplicate n: {}", dup_read);
     println!("Total seq:   {} bp", total);
     println!("Avg. seq:    {} bp", average);
     println!("Median seq:  {} bp", median);
     println!("N50:         {} bp", n50);
+    println!("N90:         {} bp", n90);
     println!("Min seq:     {} bp", min_value);
     println!("Max seq:     {} bp", max_value);
     Ok(())
