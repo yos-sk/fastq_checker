@@ -20,3 +20,8 @@ cargo build --release
 ```
 ./target/release/fastq_checker rmdup --input-file ${INPUT_FILE} --format {fastq/fasta}
 ```
+
+- Extract: extract sequences
+```
+./target/release/fastq_checker rmdup --input-file ${INPUT_FILE} --format {fastq/fasta} --length ${LENGTH_THRESHOLD}
+```
