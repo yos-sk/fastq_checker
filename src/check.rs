@@ -32,7 +32,7 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
                         entry.insert(sequence_length);
                         num_read += 1;
                     }
-                    std::collections::hash_map::Entry::Occupied(entry) => {
+                    std::collections::hash_map::Entry::Occupied(_entry) => {
                         num_read += 1;
                         dup_read += 1;
                     }
@@ -51,7 +51,7 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
                             entry.insert(sequence_length);
                             num_read += 1;
                         }
-                        std::collections::hash_map::Entry::Occupied(entry) => {
+                        std::collections::hash_map::Entry::Occupied(_entry) => {
                             num_read += 1;
                             dup_read += 1;
                         }
@@ -73,7 +73,7 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
                     entry.insert(sequence_length);
                     num_read += 1;
                 }
-                std::collections::hash_map::Entry::Occupied(entry) => {
+                std::collections::hash_map::Entry::Occupied(_entry) => {
                     num_read += 1;
                     dup_read += 1;
                 }
