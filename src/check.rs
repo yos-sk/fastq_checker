@@ -124,14 +124,14 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
     }
 
 
-    println!("Total n:     {}", num_read);
-    println!("Duplicate n: {}", dup_read);
-    println!("Total seq:   {} bp", total);
-    println!("Avg. seq:    {} bp", average);
-    println!("Median seq:  {} bp", median);
-    println!("N50:         {} bp", n50);
-    println!("N90:         {} bp", n90);
-    println!("Min seq:     {} bp", min_value);
-    println!("Max seq:     {} bp", max_value);
+    println!("Total_n:     {}", num_read);
+    println!("Total_bp:   {}", total);
+    println!("Avg_bp:    {}", average);
+    println!("Median_bp:  {}", median);
+    println!("N50_bp:         {}", n50);
+    println!("Min_bp:     {}", min_value);
+    println!("Max_bp:     {}", max_value);
+    println!("Duplicate_n: {}", dup_read);
+    println!("N90_bp:         {}", n90);
     Ok(())
 }
