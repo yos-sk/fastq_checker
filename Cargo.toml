@@ -1,6 +1,6 @@
 [package]
 name = "fastq_checker"
-version = "0.2.1"
+version = "0.3.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 clap = { version = "4.3.11", features = ["derive"] }
 flate2 = "1.0.26"
+rust-htslib = "0.46.0"

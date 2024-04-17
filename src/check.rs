@@ -1,30 +1,90 @@
 use std::collections::HashMap;
 use std::error::Error;
 use std::io::BufRead;
+use rust_htslib::{bam, bam::Read};
 
 use fastq_checker::open_file;
 
 
 pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
-    let reader = open_file(input_file).expect(&format!("Could not open {}", input_file));
-
-    let mut read_id = String::new();
-    let mut sequence = String::new();
-
     let mut hash_info: HashMap<String, usize> = HashMap::new();
     let mut num_read: usize = 0;
     let mut dup_read: usize = 0;
 
-    if format == "fastq" {
-        for (i, line) in reader.lines().enumerate() {
-            let line = line?;
-            match i % 4 {
-                0 => read_id = line,
-                1 => sequence = line,
-                _ => (),
+    if format == "bam" {
+        let mut bam = bam::Reader::from_path(input_file).expect(&format!("Could not open {}", input_file));
+        for read in bam
+        .records()
+        .map(|r| r.expect("Failure parsing Bam file"))
+        {
+            let read_id: String = String::from_utf8_lossy(read.qname()).to_string();
+            let sequence_length = read.seq_len();
+            match hash_info.entry(read_id) {
+                std::collections::hash_map::Entry::Vacant(entry) => {
+                    entry.insert(sequence_length);
+                    num_read += 1;
+                }
+                std::collections::hash_map::Entry::Occupied(_entry) => {
+                    num_read += 1;
+                    dup_read += 1;
+                }
             }
-            if i % 4 == 3 {
-                let read_id = &read_id[1..];
+        }
+    } else {
+        let reader = open_file(input_file).expect(&format!("Could not open {}", input_file));
+        let mut read_id = String::new();
+        let mut sequence = String::new();
+        if format == "fastq" {
+            for (i, line) in reader.lines().enumerate() {
+                let line = line?;
+                match i % 4 {
+                    0 => read_id = line.trim_start_matches('@').to_string(),
+                    1 => sequence = line,
+                    3 => {
+                        let t_read_id = read_id.clone();
+                        let sequence_length = sequence.len();
+    
+                        match hash_info.entry(t_read_id) {
+                            std::collections::hash_map::Entry::Vacant(entry) => {
+                                entry.insert(sequence_length);
+                                num_read += 1;
+                            }
+                            std::collections::hash_map::Entry::Occupied(_entry) => {
+                                num_read += 1;
+                                dup_read += 1;
+                            }
+                        } 
+                    },
+                    _ => (),
+                }
+            }
+        } else if format == "fasta" {
+            for line in reader.lines() {
+                let line = line?;
+                if line.starts_with(">") {
+                    if !sequence.is_empty() {
+                        let read_id = read_id.trim_start_matches('@');
+                        let sequence_length = sequence.len();
+                        match hash_info.entry(read_id.to_string()) {
+                            std::collections::hash_map::Entry::Vacant(entry) => {
+                                entry.insert(sequence_length);
+                                num_read += 1;
+                            }
+                            std::collections::hash_map::Entry::Occupied(_entry) => {
+                                num_read += 1;
+                                dup_read += 1;
+                            }
+                        }
+                        sequence.clear();
+                    }
+                    read_id = line;
+                } else {
+                    sequence.push_str(&line);
+                }
+            }
+
+            if !sequence.is_empty() {
+                let read_id = read_id.trim_start_matches('@');
                 let sequence_length = sequence.len();
 
                 match hash_info.entry(read_id.to_string()) {
@@ -36,46 +96,6 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
                         num_read += 1;
                         dup_read += 1;
                     }
-                }
-            }
-        }
-    } else if format == "fasta" {
-        for line in reader.lines() {
-            let line = line?;
-            if line.starts_with(">") {
-                if !sequence.is_empty() {
-                    let read_id = read_id.trim_start_matches('@');
-                    let sequence_length = sequence.len();
-                    match hash_info.entry(read_id.to_string()) {
-                        std::collections::hash_map::Entry::Vacant(entry) => {
-                            entry.insert(sequence_length);
-                            num_read += 1;
-                        }
-                        std::collections::hash_map::Entry::Occupied(_entry) => {
-                            num_read += 1;
-                            dup_read += 1;
-                        }
-                    }
-                    sequence.clear();
-                }
-                read_id = line;
-            } else {
-                sequence.push_str(&line);
-            }
-        }
-
-        if !sequence.is_empty() {
-            let read_id = read_id.trim_start_matches('@');
-            let sequence_length = sequence.len();
-
-            match hash_info.entry(read_id.to_string()) {
-                std::collections::hash_map::Entry::Vacant(entry) => {
-                    entry.insert(sequence_length);
-                    num_read += 1;
-                }
-                std::collections::hash_map::Entry::Occupied(_entry) => {
-                    num_read += 1;
-                    dup_read += 1;
                 }
             }
         }
@@ -125,13 +145,13 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
 
 
     println!("Total_n:     {}", num_read);
-    println!("Total_bp:   {}", total);
-    println!("Avg_bp:    {}", average);
-    println!("Median_bp:  {}", median);
-    println!("N50_bp:         {}", n50);
-    println!("Min_bp:     {}", min_value);
-    println!("Max_bp:     {}", max_value);
-    println!("Duplicate_n: {}", dup_read);
-    println!("N90_bp:         {}", n90);
+    println!("Total_bp:    {}", total);
+    println!("Avg_bp:      {}", average);
+    println!("Median_bp:   {}", median);
+    println!("N50_bp:      {}", n50);
+    println!("Min_bp:      {}", min_value);
+    println!("Max_bp:      {}", max_value);
+    println!("N90_bp:      {}", n90);
+    println!("Duplicate_n: {}", dup_read); 
     Ok(())
 }
