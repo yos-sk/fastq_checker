@@ -10,7 +10,6 @@ pub fn run(input_file: &str, format: &str, length: usize) -> Result<(), Box<dyn 
     let mut sequence = String::new();
     let mut quality = String::new();
 
-
     if format == "fastq" {
         for (i, line) in reader.lines().enumerate() {
             let line = line?;

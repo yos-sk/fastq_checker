@@ -1,10 +1,9 @@
+use rust_htslib::{bam, bam::Read};
 use std::collections::HashMap;
 use std::error::Error;
 use std::io::BufRead;
-use rust_htslib::{bam, bam::Read};
 
 use fastq_checker::open_file;
-
 
 pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
     let mut hash_info: HashMap<String, usize> = HashMap::new();
@@ -12,11 +11,9 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
     let mut dup_read: usize = 0;
 
     if format == "bam" {
-        let mut bam = bam::Reader::from_path(input_file).expect(&format!("Could not open {}", input_file));
-        for read in bam
-        .records()
-        .map(|r| r.expect("Failure parsing Bam file"))
-        {
+        let mut bam =
+            bam::Reader::from_path(input_file).expect(&format!("Could not open {}", input_file));
+        for read in bam.records().map(|r| r.expect("Failure parsing Bam file")) {
             let read_id: String = String::from_utf8_lossy(read.qname()).to_string();
             let sequence_length = read.seq_len();
             match hash_info.entry(read_id) {
@@ -43,7 +40,7 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
                     3 => {
                         let t_read_id = read_id.clone();
                         let sequence_length = sequence.len();
-    
+
                         match hash_info.entry(t_read_id) {
                             std::collections::hash_map::Entry::Vacant(entry) => {
                                 entry.insert(sequence_length);
@@ -53,8 +50,8 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
                                 num_read += 1;
                                 dup_read += 1;
                             }
-                        } 
-                    },
+                        }
+                    }
                     _ => (),
                 }
             }
@@ -143,7 +140,6 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
         }
     }
 
-
     println!("Total_n:     {}", num_read);
     println!("Total_bp:    {}", total);
     println!("Avg_bp:      {}", average);
@@ -152,6 +148,6 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
     println!("Min_bp:      {}", min_value);
     println!("Max_bp:      {}", max_value);
     println!("N90_bp:      {}", n90);
-    println!("Duplicate_n: {}", dup_read); 
+    println!("Duplicate_n: {}", dup_read);
     Ok(())
 }
