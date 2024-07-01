@@ -6,7 +6,7 @@ mod extract;
 mod rmdup;
 
 #[derive(Parser)]
-#[command(author="Yoshitaka Sakamoto", version="0.3.0", about="fastq/fasta tool kit", long_about = None)]
+#[command(author="Yoshitaka Sakamoto", version="0.3.1", about="fastq/fasta tool kit", long_about = None)]
 struct Arguments {
     #[command(subcommand)]
     command: Commands,
