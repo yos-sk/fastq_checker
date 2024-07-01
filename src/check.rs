@@ -6,7 +6,8 @@ use std::io::BufRead;
 use fastq_checker::open_file;
 
 pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
-    let mut hash_info: HashMap<String, usize> = HashMap::new();
+    let mut lengths: HashMap<String, usize> = HashMap::new();
+    let mut qualities: HashMap<String, f64> = HashMap::new();
     let mut num_read: usize = 0;
     let mut dup_read: usize = 0;
 
@@ -16,15 +17,18 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
         for read in bam.records().map(|r| r.expect("Failure parsing Bam file")) {
             let read_id: String = String::from_utf8_lossy(read.qname()).to_string();
             let sequence_length = read.seq_len();
-            match hash_info.entry(read_id) {
-                std::collections::hash_map::Entry::Vacant(entry) => {
-                    entry.insert(sequence_length);
-                    num_read += 1;
-                }
-                std::collections::hash_map::Entry::Occupied(_entry) => {
-                    num_read += 1;
-                    dup_read += 1;
-                }
+            let sequence_quality: Vec<u8> = read.qual().to_vec();
+            let sum_quality: usize = sequence_quality.iter().map(|&x| x as usize).sum();
+            if !lengths.contains_key(&read_id) {
+                lengths.insert(read_id.clone(), sequence_length);
+                num_read += 1;
+            } else {
+                num_read += 1;
+                dup_read += 1;
+            }
+
+            if !qualities.contains_key(&read_id) {
+                qualities.insert(read_id.clone(), sum_quality as f64 / sequence_length as f64);
             }
         }
     } else {
@@ -38,18 +42,21 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
                     0 => read_id = line.trim_start_matches('@').to_string(),
                     1 => sequence = line,
                     3 => {
-                        let t_read_id = read_id.clone();
+                        let quality = line;
+                        //let t_read_id = read_id.clone();
                         let sequence_length = sequence.len();
+                        let sum_quality: usize = decode_quality(&quality).iter().sum();
 
-                        match hash_info.entry(t_read_id) {
-                            std::collections::hash_map::Entry::Vacant(entry) => {
-                                entry.insert(sequence_length);
-                                num_read += 1;
-                            }
-                            std::collections::hash_map::Entry::Occupied(_entry) => {
-                                num_read += 1;
-                                dup_read += 1;
-                            }
+                        if !lengths.contains_key(&read_id) {
+                            lengths.insert(read_id.clone(), sequence_length);
+                            num_read += 1;
+                        } else {
+                            num_read += 1;
+                            dup_read += 1;
+                        }
+
+                        if !qualities.contains_key(&read_id) {
+                            qualities.insert(read_id.clone(), sum_quality as f64 / sequence_length as f64);
                         }
                     }
                     _ => (),
@@ -60,17 +67,14 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
                 let line = line?;
                 if line.starts_with(">") {
                     if !sequence.is_empty() {
-                        let read_id = read_id.trim_start_matches('@');
+                        let read_id = read_id.trim_start_matches('@').to_string();
                         let sequence_length = sequence.len();
-                        match hash_info.entry(read_id.to_string()) {
-                            std::collections::hash_map::Entry::Vacant(entry) => {
-                                entry.insert(sequence_length);
-                                num_read += 1;
-                            }
-                            std::collections::hash_map::Entry::Occupied(_entry) => {
-                                num_read += 1;
-                                dup_read += 1;
-                            }
+                        if !lengths.contains_key(&read_id) {
+                            lengths.insert(read_id.clone(), sequence_length);
+                            num_read += 1;
+                        } else {
+                            num_read += 1;
+                            dup_read += 1;
                         }
                         sequence.clear();
                     }
@@ -81,41 +85,38 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
             }
 
             if !sequence.is_empty() {
-                let read_id = read_id.trim_start_matches('@');
+                let read_id = read_id.trim_start_matches('@').to_string();
                 let sequence_length = sequence.len();
 
-                match hash_info.entry(read_id.to_string()) {
-                    std::collections::hash_map::Entry::Vacant(entry) => {
-                        entry.insert(sequence_length);
-                        num_read += 1;
-                    }
-                    std::collections::hash_map::Entry::Occupied(_entry) => {
-                        num_read += 1;
-                        dup_read += 1;
-                    }
+                if !lengths.contains_key(&read_id) {
+                    lengths.insert(read_id.clone(), sequence_length);
+                    num_read += 1;
+                } else {
+                    num_read += 1;
+                    dup_read += 1;
                 }
             }
         }
     }
 
-    let values: Vec<_> = hash_info.values().collect();
+    let values: Vec<usize> = lengths.values().cloned().collect();
     let max_value: isize = match values.iter().max() {
-        Some(value) => **value as isize,
+        Some(value) => *value as isize,
         None => -1,
     };
     let min_value: isize = match values.iter().min() {
-        Some(value) => **value as isize,
+        Some(value) => *value as isize,
         None => -1,
     };
-    let sum: f64 = values.iter().map(|&x| *x as f64).sum();
-    let average = sum / values.len() as f64;
+    let sum: usize = values.iter().sum();
+    let average = sum as f64 / values.len() as f64;
 
     let mut sorted_values = values.clone();
     sorted_values.sort();
     let median = if values.len() / 2 % 2 == 0 {
-        *sorted_values[values.len() / 2] as f64
+        sorted_values[values.len() / 2] as f64
     } else {
-        (*sorted_values[values.len() / 2 - 1] as f64 + *sorted_values[values.len() / 2] as f64)
+        (sorted_values[values.len() / 2 - 1] as f64 + sorted_values[values.len() / 2] as f64)
             / 2 as f64
     };
 
@@ -124,21 +125,27 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
     let mut n50 = 0;
     let mut n90 = 0;
 
+
     for val in sorted_values.iter() {
-        len += **val;
+        len += *val;
         if len > total / 2 {
-            n50 = **val;
+            n50 = *val;
             break;
         }
     }
 
     for val in sorted_values.iter() {
-        len += **val;
+        len += *val;
         if len > total * 9 / 10 {
-            n90 = **val;
+            n90 = *val;
             break;
         }
     }
+
+    let q_values: Vec<f64> = qualities.values().cloned().collect();
+    let q_sum: f64 = q_values.iter().sum();
+    let q_len: f64 = q_values.len() as f64;
+    let mean_qvalues = q_sum / q_len;
 
     println!("Total_n:     {}", num_read);
     println!("Total_bp:    {}", total);
@@ -147,7 +154,13 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
     println!("N50_bp:      {}", n50);
     println!("Min_bp:      {}", min_value);
     println!("Max_bp:      {}", max_value);
+    println!("Mean_quals   {}", mean_qvalues);
     println!("N90_bp:      {}", n90);
     println!("Duplicate_n: {}", dup_read);
     Ok(())
+}
+
+
+fn decode_quality(quality_str: &str) -> Vec<usize> {
+    quality_str.chars().map(|c| c as usize - 33).collect()
 }
