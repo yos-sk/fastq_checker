@@ -29,6 +29,7 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
 
             if !qualities.contains_key(&read_id) {
                 qualities.insert(read_id.clone(), sum_quality as f64 / sequence_length as f64);
+                eprintln!("{}\t{}\t{}", read_id.clone(), sequence_length, sum_quality as f64 / sequence_length as f64);
             }
         }
     } else {
@@ -57,6 +58,7 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
 
                         if !qualities.contains_key(&read_id) {
                             qualities.insert(read_id.clone(), sum_quality as f64 / sequence_length as f64);
+                            eprintln!("{}\t{}\t{}", read_id.clone(), sequence_length, sum_quality as f64 / sequence_length as f64);
                         }
                     }
                     _ => (),
@@ -71,6 +73,7 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
                         let sequence_length = sequence.len();
                         if !lengths.contains_key(&read_id) {
                             lengths.insert(read_id.clone(), sequence_length);
+                            eprintln!("{}\t{}", read_id.clone(), sequence_length);
                             num_read += 1;
                         } else {
                             num_read += 1;
@@ -90,6 +93,7 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
 
                 if !lengths.contains_key(&read_id) {
                     lengths.insert(read_id.clone(), sequence_length);
+                    eprintln!("{}\t{}", read_id.clone(), sequence_length);
                     num_read += 1;
                 } else {
                     num_read += 1;
