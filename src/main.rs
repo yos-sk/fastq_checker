@@ -28,6 +28,9 @@ enum Commands {
 
         #[arg(short = 'f', long)]
         format: String,
+
+        #[arg(short = 'o', long)]
+        output_file: String,
     },
     Extract {
         #[arg(short = 'i', long)]
@@ -52,8 +55,8 @@ fn main() {
             }
         }
 
-        Commands::Rmdup { input_file, format } => {
-            if let Err(error) = rmdup::run(input_file, format) {
+        Commands::Rmdup { input_file, format, output_file } => {
+            if let Err(error) = rmdup::run(input_file, format, output_file) {
                 eprintln!("{}", error);
                 process::exit(1);
             }
