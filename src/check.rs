@@ -15,6 +15,9 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
         let mut bam =
             bam::Reader::from_path(input_file).expect(&format!("Could not open {}", input_file));
         for read in bam.records().map(|r| r.expect("Failure parsing Bam file")) {
+            if read.is_supplementary() | read.is_secondary() {
+                continue;
+            }
             let read_id: String = String::from_utf8_lossy(read.qname()).to_string();
             let sequence_length = read.seq_len();
             let sequence_quality: Vec<u8> = read.qual().to_vec();
