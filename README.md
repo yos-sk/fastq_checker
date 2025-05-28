@@ -1,5 +1,5 @@
 # fastq_checker
-Check duplicates and calculate statistics
+Check sequence duplicates and calculate sequence statistics from bam/fasta/fastq
 
 ## Install
 
