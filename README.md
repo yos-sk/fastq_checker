@@ -25,7 +25,8 @@ Options:
   -V, --version  Print version
 ```
 
-- Check: check duplicates and calculate statistics
+### check
+check duplicates and calculate statistics
 ```
 fastq_checker check -h
 Usage: fastq_checker check --input-file <INPUT_FILE> --format <FORMAT>
@@ -36,7 +37,8 @@ Options:
   -h, --help                     Print help
 ```
 
-- Rmdup: remove duplicates
+### rmdup
+remove sequence duplicates
 ```
 fastq_checker rmdup -h
 Usage: fastq_checker rmdup --input-file <INPUT_FILE> --format <FORMAT> --output-file <OUTPUT_FILE>
@@ -48,7 +50,8 @@ Options:
   -h, --help                       Print help
 ```
 
-- Extract: extract sequences
+### extract
+extract sequences
 ```
 fastq_checker extract -h
 Usage: fastq_checker extract --input-file <INPUT_FILE> --format <FORMAT> --length <LENGTH>
