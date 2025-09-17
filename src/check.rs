@@ -10,6 +10,7 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
     let mut qualities: HashMap<String, f64> = HashMap::new();
     let mut num_read: usize = 0;
     let mut dup_read: usize = 0;
+    let mut num_read_ov100k: usize = 0; 
 
     if format == "bam" {
         let mut bam =
@@ -22,6 +23,9 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
             let sequence_length = read.seq_len();
             let sequence_quality: Vec<u8> = read.qual().to_vec();
             let sum_quality: usize = sequence_quality.iter().map(|&x| x as usize).sum();
+            if sequence_length > 100000 {
+                num_read_ov100k += 1;
+            }
             if !lengths.contains_key(&read_id) {
                 lengths.insert(read_id.clone(), sequence_length);
                 num_read += 1;
@@ -51,6 +55,10 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
                         let sequence_length = sequence.len();
                         let sum_quality: usize = decode_quality(&quality).iter().sum();
 
+                        if sequence_length > 1000000 {
+                            num_read_ov100k += 1;
+                        }
+
                         if !lengths.contains_key(&read_id) {
                             lengths.insert(read_id.clone(), sequence_length);
                             num_read += 1;
@@ -74,6 +82,9 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
                     if !sequence.is_empty() {
                         let read_id = read_id.trim_start_matches('@').to_string();
                         let sequence_length = sequence.len();
+                        if sequence_length > 1000000 {
+                            num_read_ov100k += 1;
+                        }
                         if !lengths.contains_key(&read_id) {
                             lengths.insert(read_id.clone(), sequence_length);
                             eprintln!("{}\t{}", read_id.clone(), sequence_length);
@@ -93,6 +104,10 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
             if !sequence.is_empty() {
                 let read_id = read_id.trim_start_matches('@').to_string();
                 let sequence_length = sequence.len();
+
+                if sequence_length > 1000000 {
+                    num_read_ov100k += 1;
+                }
 
                 if !lengths.contains_key(&read_id) {
                     lengths.insert(read_id.clone(), sequence_length);
@@ -127,6 +142,8 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
             / 2 as f64
     };
 
+    let sum_ov100k: usize = lengths.values().filter(|&&v| v >= 100).sum();
+
     let mut len: usize = 0;
     let total = sum as usize;
     let mut n50 = 0;
@@ -154,16 +171,18 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
     let q_len: f64 = q_values.len() as f64;
     let mean_qvalues = q_sum / q_len;
 
-    println!("Total_n:     {}", num_read);
-    println!("Total_bp:    {}", total);
-    println!("Avg_bp:      {}", average);
-    println!("Median_bp:   {}", median);
-    println!("N50_bp:      {}", n50);
-    println!("Min_bp:      {}", min_value);
-    println!("Max_bp:      {}", max_value);
-    println!("Mean_quals   {}", mean_qvalues);
-    println!("N90_bp:      {}", n90);
-    println!("Duplicate_n: {}", dup_read);
+    println!("Total_n:          {}", num_read);
+    println!("Total_n >100 kb   {}", num_read_ov100k);
+    println!("Total_bp:         {}", total);
+    println!("Total_bp >100 kb: {}", sum_ov100k);
+    println!("Avg_bp:           {}", average);
+    println!("Median_bp:        {}", median);
+    println!("N50_bp:           {}", n50);
+    println!("Min_bp:           {}", min_value);
+    println!("Max_bp:           {}", max_value);
+    println!("Mean_quals        {}", mean_qvalues);
+    println!("N90_bp:           {}", n90);
+    println!("Duplicate_n:      {}", dup_read);
     Ok(())
 }
 

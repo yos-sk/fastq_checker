@@ -26,7 +26,7 @@ Options:
 ```
 
 ### check
-check duplicates and calculate statistics
+This command checks read duplicates and calculate statistics from fasta/fastq/bam file
 ```
 fastq_checker check -h
 Usage: fastq_checker check --input-file <INPUT_FILE> --format <FORMAT>
@@ -38,7 +38,7 @@ Options:
 ```
 
 ### rmdup
-remove sequence duplicates
+This command removes read duplicates in fasta/fastq/bam file
 ```
 fastq_checker rmdup -h
 Usage: fastq_checker rmdup --input-file <INPUT_FILE> --format <FORMAT> --output-file <OUTPUT_FILE>
@@ -51,7 +51,7 @@ Options:
 ```
 
 ### extract
-extract sequences
+This command extracts reads longer than the specified length from fasta/fastq/bam file
 ```
 fastq_checker extract -h
 Usage: fastq_checker extract --input-file <INPUT_FILE> --format <FORMAT> --length <LENGTH>
