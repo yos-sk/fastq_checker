@@ -55,7 +55,7 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
                         let sequence_length = sequence.len();
                         let sum_quality: usize = decode_quality(&quality).iter().sum();
 
-                        if sequence_length > 1000000 {
+                        if sequence_length > 100000 {
                             num_read_ov100k += 1;
                         }
 
@@ -82,7 +82,7 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
                     if !sequence.is_empty() {
                         let read_id = read_id.trim_start_matches('@').to_string();
                         let sequence_length = sequence.len();
-                        if sequence_length > 1000000 {
+                        if sequence_length > 100000 {
                             num_read_ov100k += 1;
                         }
                         if !lengths.contains_key(&read_id) {
@@ -105,7 +105,7 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
                 let read_id = read_id.trim_start_matches('@').to_string();
                 let sequence_length = sequence.len();
 
-                if sequence_length > 1000000 {
+                if sequence_length > 100000 {
                     num_read_ov100k += 1;
                 }
 
@@ -142,7 +142,7 @@ pub fn run(input_file: &str, format: &str) -> Result<(), Box<dyn Error>> {
             / 2 as f64
     };
 
-    let sum_ov100k: usize = lengths.values().filter(|&&v| v >= 100).sum();
+    let sum_ov100k: usize = lengths.values().filter(|&&v| v > 100000).sum();
 
     let mut len: usize = 0;
     let total = sum as usize;
